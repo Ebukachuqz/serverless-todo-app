@@ -42,3 +42,28 @@ export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
     return error
   }
 }
+
+// update todo function
+export async function updateTodo(
+  todoId: string,
+  userId: string,
+  updateTodoRequest: UpdateTodoRequest
+): Promise<void> {
+  createLogger('Updating todo')
+  return await todosAccess.updateTodoItem(todoId, userId, updateTodoRequest)
+}
+
+// delete todo function
+export async function deleteTodo(
+  todoId: string,
+  userId: string
+): Promise<void> {
+  return await todosAccess.deleteTodoItem(todoId, userId)
+}
+
+// create attachment presigned url function
+export async function createAttachmentPresignedUrl(
+  todoId: string
+): Promise<String> {
+  return attachmentUtils.getUploadUrl(todoId)
+}

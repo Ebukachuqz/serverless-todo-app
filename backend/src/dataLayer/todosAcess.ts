@@ -1,9 +1,10 @@
 import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
+// import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate'
+var AWSXRay = require('aws-xray-sdk')
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -52,29 +53,22 @@ export class TodosAccess {
     todoId: string,
     userId: string,
     todoUpdate: TodoUpdate
-  ): Promise<TodoUpdate> {
-    logger.info('Update todo item func')
-
+  ): Promise<void> {
+    logger.info(`Updating todo id: ${todoId}`)
     await this.docClient
       .update({
         TableName: this.todosTable,
-        Key: {
-          todoId,
-          userId
-        },
-        UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
+        Key: { userId, todoId },
+        ConditionExpression: 'attribute_exists(todoId)',
+        UpdateExpression: 'set #n = :n, dueDate = :due, done = :dn',
+        ExpressionAttributeNames: { '#n': 'name' },
         ExpressionAttributeValues: {
-          ':name': todoUpdate.name,
-          ':dueDate': todoUpdate.dueDate,
-          ':done': todoUpdate.done
-        },
-        ExpressionAttributeNames: {
-          '#name': 'name'
+          ':n': todoUpdate.name,
+          ':due': todoUpdate.dueDate,
+          ':dn': todoUpdate.done
         }
       })
       .promise()
-
-    return todoUpdate
   }
 
   async deleteTodoItem(todoId: string, userId: string): Promise<void> {
@@ -86,28 +80,6 @@ export class TodosAccess {
         Key: {
           todoId,
           userId
-        }
-      })
-      .promise()
-  }
-
-  async updateTodoAttachmentUrl(
-    todoId: string,
-    userId: string,
-    attachmentUrl: string
-  ): Promise<void> {
-    logger.info('Update todo attachment url func')
-
-    await this.docClient
-      .update({
-        TableName: this.todosTable,
-        Key: {
-          todoId,
-          userId
-        },
-        UpdateExpression: 'set attachmentUrl = :attachmentUrl',
-        ExpressionAttributeValues: {
-          ':attachmentUrl': attachmentUrl
         }
       })
       .promise()
